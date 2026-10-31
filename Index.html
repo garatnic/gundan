@@ -28,7 +28,8 @@ let coins=0,stage=1,prestige=0,cleared=0,correct=0,levels=[0,0,0,0],costs=[8,5,6
 const bossAreaAttack={radius:20,count:1,delay:1};
 const names=['👥 にんずう','⚔ こうげき','⚡ はやさ','♥ HP'],growth=[1.7,1.6,1.5,1.5];
 const count=()=>3+levels[0],attack=()=>1+levels[1],period=()=>Math.max(.15,Math.pow(.9,levels[2])),health=()=>1+levels[3],mult=()=>1+prestige*.5;
-function currentEnemy(){return enemies[0]||null}
+function currentEnemy(){return enemies.find(e=>e.hp>0)||null}
+function combatMode(){return strategyPaused?'strategyPaused':remaining>0?'running':'autoPaused'}
 function resetCombatState(){remaining=0;strategyPaused=false}
 function clearAllUnits(){for(const unit of units)unit.el.remove();units=[]}
 function transitionStage(){stage++;makeEnemy();for(const unit of units){unit.targetId=currentEnemy()?.id??null;unit.state='moving'}}
