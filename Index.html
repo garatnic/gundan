@@ -4,7 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>さんすう ぐんだん</title>
+<meta name="gundan-version" content="20261031-03">
 <style>body{margin:0;padding:12px;background:light-dark(#e7edf6,#0e1725);color-scheme:light dark}.cursor-interaction{cursor:pointer}button:disabled{cursor:default}</style>
+<style>#math-army .build-info{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:8px;padding:0 16px 12px;font-size:12px}#math-army .build-info button{padding:6px 10px;font-size:12px}</style>
 </head>
 <body>
 <div id="math-army">
@@ -15,8 +17,11 @@
 <div class="arena" role="img" aria-label="正解すると味方が出撃し、3秒間だけ戦闘が進みます"><div class="enemyinfo"><strong class="stage"></strong><div class="track"><div class="bar"></div></div><span class="enemyStats"></span></div><div class="enemy">🤖</div><div class="state"></div></div>
 <div class="panel"><div class="message" aria-live="polite">せいかいで 3びょう バトル！</div><div class="question"><div class="expression" id="army-expression"></div><div class="choices" role="group" aria-labelledby="army-expression"></div></div>
 <div class="upgrades"></div><div class="bottom"><span class="progressText"></span><button type="button" class="prestige cursor-interaction" disabled>てんせい：10クリアで かいほう</button></div><p class="note">かんがえる あいだは ストップ。つよくすると、いまいる なかまも パワーアップ！</p></div></div>
+<div class="build-info"><span>バージョン 20261031-03</span><button type="button" class="refresh-build cursor-interaction">さいしんばんを よみこむ</button></div>
 <script>
 (()=>{
+qRefresh();
+function qRefresh(){document.querySelector('#math-army .refresh-build').onclick=()=>{const url=new URL(location.href);url.searchParams.set('v',document.querySelector('meta[name="gundan-version"]').content);url.searchParams.set('_refresh',String(Date.now()));location.replace(url.href)}}
 const root=document.getElementById('math-army'),q=s=>root.querySelector(s),arena=q('.arena'),choices=q('.choices'),message=q('.message');
 let coins=0,stage=1,prestige=0,cleared=0,correct=0,levels=[0,0,0,0],costs=[8,5,6,5],units=[],effects=[],enemy,remaining=0,last=0,answer=0,uid=0;
 const names=['👥 にんずう','⚔ こうげき','⚡ はやさ','♥ HP'],growth=[1.7,1.6,1.5,1.5];
