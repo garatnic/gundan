@@ -1,7 +1,7 @@
 # 更新確認・キャッシュ対策
 
 ## 現在のバージョン
-20261031-06
+20261031-07
 
 確認URL：https://garatnic.github.io/gundan/Index.html?v=20261031-06
 
