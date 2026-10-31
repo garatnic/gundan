@@ -4,6 +4,7 @@ class Element{
  appendChild(e){this.children.push(e);e.parent=this;return e} remove(){this.isConnected=false;if(this.parent)this.parent.children=this.parent.children.filter(x=>x!==this)}
  replaceChildren(){this.children=[]} querySelector(s){this.nodes??={};return this.nodes[s]??(this.nodes[s]=new Element())}
  querySelectorAll(s){return s==='.upgrade'?nodes['.upgrades'].children:[]}
+ setAttribute(){} removeAttribute(){}
  getBoundingClientRect(){return {height:44}}
  set innerHTML(s){this.html=s} get innerHTML(){return this.html}
 }
