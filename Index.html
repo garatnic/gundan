@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>さんすう ぐんだん</title>
-<meta name="gundan-version" content="20261031-07">
+<meta name="gundan-version" content="20261031-08">
 <style>body{margin:0;padding:12px;background:light-dark(#e7edf6,#0e1725);color-scheme:light dark}.cursor-interaction{cursor:pointer}button:disabled{cursor:default}</style>
 <style>#math-army .build-info{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:8px;padding:0 16px 12px;font-size:12px}#math-army .build-info button{padding:6px 10px;font-size:12px}</style>
 
@@ -18,17 +18,17 @@
 <div class="arena" role="img" aria-label="正解すると味方が出撃し、3秒間だけ戦闘が進みます"><div class="enemyinfo"><strong class="stage"></strong><div class="track"><div class="bar"></div></div><span class="enemyStats"></span></div><div class="enemy">🤖</div><div class="state"></div></div>
 <div class="panel"><div class="message" aria-live="polite">せいかいで 3びょう バトル！</div><div class="question"><div class="expression" id="army-expression"></div><div class="choices" role="group" aria-labelledby="army-expression"></div></div>
 <div class="upgrades"></div><div class="bottom"><span class="progressText"></span><button type="button" class="prestige cursor-interaction" disabled>てんせい：10クリアで かいほう</button></div><p class="note">かんがえる あいだは ストップ。つよくすると、いまいる なかまも パワーアップ！</p></div></div>
-<div class="build-info"><span>バージョン 20261031-07</span><button type="button" class="refresh-build cursor-interaction">さいしんばんを よみこむ</button></div>
+<div class="build-info"><span>バージョン 20261031-08</span><button type="button" class="refresh-build cursor-interaction">さいしんばんを よみこむ</button></div>
 <script>
 (()=>{
 qRefresh();
 function qRefresh(){document.querySelector('#math-army .refresh-build').onclick=()=>{const url=new URL(location.href);url.searchParams.set('v',document.querySelector('meta[name="gundan-version"]').content);url.searchParams.set('_refresh',String(Date.now()));location.replace(url.href)}}
 const root=document.getElementById('math-army'),q=s=>root.querySelector(s),arena=q('.arena'),choices=q('.choices'),message=q('.message');
-let coins=0,stage=1,prestige=0,cleared=0,correct=0,levels=[0,0,0,0],costs=[8,5,6,5],units=[],effects=[],enemy,remaining=0,last=0,answer=0,uid=0;
-const bossAreaAttack={radius:5,count:1,minDistance:35,maxDistance:85};
+let coins=0,stage=1,prestige=0,cleared=0,correct=0,levels=[0,0,0,0],costs=[8,5,6,5],units=[],effects=[],pendingAreas=[],enemy,remaining=0,last=0,answer=0,uid=0;
+const bossAreaAttack={radius:5,count:1,minDistance:35,maxDistance:85,delay:1};
 const names=['👥 にんずう','⚔ こうげき','⚡ はやさ','♥ HP'],growth=[1.7,1.6,1.5,1.5];
 const count=()=>3+levels[0],attack=()=>1+levels[1],period=()=>Math.max(.15,Math.pow(.9,levels[2])),health=()=>1+levels[3],mult=()=>1+prestige*.5;
-function makeEnemy(){const boss=stage%5===0,type=boss?1:(stage-1)%3;const max=Math.ceil(20*Math.pow(1.25,stage-1)*(boss?1.7:1));enemy={max,hp:max,atk:1+Math.floor((stage-1)/5),period:type===0?2:type===1?3:1,cd:0,type,boss,reward:Math.ceil(5*Math.pow(1.2,stage-1))*(boss?3:1)};q('.enemy').textContent=boss?'👑':type===0?'🤖':type===1?'🗿':'🥷';q('.enemy').style.opacity='1'}
+function makeEnemy(){clearBossAreas();const boss=stage%5===0,type=boss?1:(stage-1)%3;const max=Math.ceil(20*Math.pow(1.25,stage-1)*(boss?1.7:1));enemy={max,hp:max,atk:1+Math.floor((stage-1)/5),period:type===0?2:type===1?3:1,cd:0,type,boss,reward:Math.ceil(5*Math.pow(1.2,stage-1))*(boss?3:1)};q('.enemy').textContent=boss?'👑':type===0?'🤖':type===1?'🗿':'🥷';q('.enemy').style.opacity='1'}
 function problem(){let a,b,op;const type=Math.floor(Math.random()*4);if(type===0){a=1+Math.floor(Math.random()*20);b=1+Math.floor(Math.random()*20);op='＋';answer=a+b}else if(type===1){a=1+Math.floor(Math.random()*20);b=Math.floor(Math.random()*(a+1));op='−';answer=a-b}else if(type===2){a=1+Math.floor(Math.random()*9);b=1+Math.floor(Math.random()*9);op='×';answer=a*b}else{b=1+Math.floor(Math.random()*9);answer=1+Math.floor(Math.random()*9);a=b*answer;op='÷'}q('.expression').textContent=`${a}${op}${b}＝`;renderChoices()}
 
 function renderChoices(){
@@ -50,22 +50,32 @@ q('.prestige').onclick=()=>{if(cleared<10||remaining)return;prestige++;stage=1;c
 function win(){remaining=0;cleared=Math.max(cleared,stage);const reward=enemy.reward;earn(units.length+reward,arena.clientWidth/2-45,114);units.forEach(u=>u.el.remove());units=[];q('.enemy').style.opacity='.3';message.textContent=`🎉 ステージ ${stage} クリア！ なかまのぶん＋ほうしゅう ${reward}コイン`;stage++;makeEnemy();finish(false)}
 function finish(normal=true){remaining=0;problem();if(normal)message.textContent='つぎの せいかいで また うごくよ！';update()}
 
+function clearBossAreas(){for(const group of pendingAreas)for(const area of group.areas)area.el.remove();pendingAreas=[]}
 function bossAttack(ex,ey){
- const hit=new Set();
- const {radius,count,minDistance,maxDistance}=bossAreaAttack;
+ const {radius,count,minDistance,maxDistance,delay}=bossAreaAttack;
+ const group={remaining:delay,damage:enemy.atk,areas:[]};
  for(let i=0;i<count;i++){
-  const angle=Math.random()*Math.PI*2;
-  const distance=minDistance+Math.random()*(maxDistance-minDistance);
+  const angle=Math.random()*Math.PI*2,distance=minDistance+Math.random()*(maxDistance-minDistance);
   const x=ex+Math.cos(angle)*distance,y=ey+Math.sin(angle)*distance;
   const circle=document.createElement('div');circle.className='boss-area';
   Object.assign(circle.style,{left:x-radius+'px',top:y-radius+'px',width:radius*2+'px',height:radius*2+'px'});
-  arena.appendChild(circle);effects.push({el:circle,t:.4});
-  for(const unit of units)if(Math.hypot(unit.x-x,unit.y-y)<=radius)hit.add(unit);
+  arena.appendChild(circle);group.areas.push({x,y,radius,el:circle});
  }
- return [...hit];
+ pendingAreas.push(group);return [];
 }
-
-function step(dt){const ex=arena.clientWidth/2,ey=116;let engaged=[];for(const u of units){const angle=Math.PI*.12+u.slot*Math.PI*.76,tx=ex+Math.cos(angle)*53,ty=ey+Math.sin(angle)*53,dx=tx-u.x,dy=ty-u.y,d=Math.hypot(dx,dy);if(d>2){const move=Math.min(d,dt*175);u.x+=dx/d*move;u.y+=dy/d*move}else{engaged.push(u);u.cd-=dt;if(u.cd<=0){u.cd+=period();enemy.hp-=attack();float('−'+attack(),ex-15+Math.random()*30,ey-24);if(enemy.hp<=0){win();return}}}}if(engaged.length){enemy.cd-=dt;if(enemy.cd<=0){enemy.cd+=enemy.period;const target=engaged.reduce((a,b)=>a.hp<b.hp?a:b);let victims=[target];if(enemy.boss){victims=bossAttack(ex,ey)}else if(enemy.type===1){victims=engaged.filter(u=>Math.hypot(u.x-target.x,u.y-target.y)<=55);const ring=document.createElement('div');ring.className='ring';Object.assign(ring.style,{left:target.x-55+'px',top:target.y-55+'px',width:'110px',height:'110px'});arena.appendChild(ring);effects.push({el:ring,t:.4})}victims.forEach(u=>{u.hp-=enemy.atk;float('−'+enemy.atk,u.x,u.y-10)})}}for(let i=units.length-1;i>=0;i--){const u=units[i];if(u.hp<=0){earn(1,u.x,u.y);u.el.remove();units.splice(i,1)}}}
+function advanceBossAreas(dt){
+ for(let i=pendingAreas.length-1;i>=0;i--){
+  const group=pendingAreas[i];group.remaining-=dt;if(group.remaining>0)continue;
+  const hit=new Set();
+  for(const area of group.areas){
+   for(const unit of units)if(Math.hypot(unit.x-area.x,unit.y-area.y)<=area.radius)hit.add(unit);
+   area.el.remove();
+  }
+  for(const unit of hit){unit.hp-=group.damage;float('−'+group.damage,unit.x,unit.y-10)}
+  pendingAreas.splice(i,1);
+ }
+}
+function step(dt){const ex=arena.clientWidth/2,ey=116;let engaged=[];for(const u of units){const angle=Math.PI*.12+u.slot*Math.PI*.76,tx=ex+Math.cos(angle)*53,ty=ey+Math.sin(angle)*53,dx=tx-u.x,dy=ty-u.y,d=Math.hypot(dx,dy);if(d>2){const move=Math.min(d,dt*175);u.x+=dx/d*move;u.y+=dy/d*move}else{engaged.push(u);u.cd-=dt;if(u.cd<=0){u.cd+=period();enemy.hp-=attack();float('−'+attack(),ex-15+Math.random()*30,ey-24);if(enemy.hp<=0){win();return}}}}advanceBossAreas(dt);engaged=engaged.filter(u=>u.hp>0);if(engaged.length){enemy.cd-=dt;if(enemy.cd<=0){enemy.cd+=enemy.period;const target=engaged.reduce((a,b)=>a.hp<b.hp?a:b);let victims=[target];if(enemy.boss){victims=bossAttack(ex,ey)}else if(enemy.type===1){victims=engaged.filter(u=>Math.hypot(u.x-target.x,u.y-target.y)<=55);const ring=document.createElement('div');ring.className='ring';Object.assign(ring.style,{left:target.x-55+'px',top:target.y-55+'px',width:'110px',height:'110px'});arena.appendChild(ring);effects.push({el:ring,t:.4})}victims.forEach(u=>{u.hp-=enemy.atk;float('−'+enemy.atk,u.x,u.y-10)})}}for(let i=units.length-1;i>=0;i--){const u=units[i];if(u.hp<=0){earn(1,u.x,u.y);u.el.remove();units.splice(i,1)}}}
 function frame(t){const dt=Math.min((t-last)/1000||0,.04);last=t;if(remaining>0){const slice=Math.min(dt,remaining);remaining-=slice;step(slice);if(remaining<=0&&choices.children[0].disabled)finish();update()}for(const u of units){u.el.style.transform=`translate(${u.x-11}px,${u.y-11}px)`;u.el.querySelector('i').style.width=Math.max(0,u.hp/u.max*100)+'%'}for(let i=effects.length-1;i>=0;i--){effects[i].t-=dt;if(effects[i].t<=0){effects[i].el.remove();effects.splice(i,1)}}requestAnimationFrame(frame)}makeEnemy();problem();update();requestAnimationFrame(frame);
 })();
 </script>
