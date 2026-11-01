@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>さんすう ぐんだん</title>
-<meta name="gundan-release" content="13">
-<meta name="gundan-version" content="20261101-10">
+<meta name="gundan-release" content="14">
+<meta name="gundan-version" content="20261101-11">
 <style>body{margin:0;padding:12px;background:light-dark(#e7edf6,#0e1725);color-scheme:light dark}.cursor-interaction{cursor:pointer}button:disabled{cursor:default}</style>
 <style>#math-army .build-info{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:8px;padding:0 16px 12px;font-size:12px}#math-army .build-info button{padding:6px 10px;font-size:12px}</style>
 
@@ -19,7 +19,7 @@
 <div class="arenaViewport" tabindex="0" role="region" aria-label="せんじょう。たてに スクロールできるよ"><div class="arena battlefield" role="img" aria-label="正解すると味方が出撃し、3秒間だけ戦闘が進みます"><div class="enemyinfo"><strong class="stage"></strong><div class="track"><div class="bar"></div></div><span class="enemyStats"></span></div><div class="enemy">🤖</div><div class="state"></div></div></div>
 <div class="panel"><div class="message" aria-live="polite">せいかいで 3びょう バトル！</div><div class="question-slot"><button type="button" class="resume answer cursor-interaction" hidden>戦闘再開</button><div class="question"><div class="expression" id="army-expression"></div><div class="choices" role="group" aria-labelledby="army-expression"></div></div></div>
 <div class="upgrades"></div><div class="bottom"><span class="progressText"></span><button type="button" class="prestige cursor-interaction" disabled>てんせい：10クリアで かいほう</button></div><p class="note">せいかいの たびに 3びょう バトル。つよくすると、いまいる なかまも パワーアップ！</p></div></div>
-<div class="build-info"><span>バージョン v13（20261101-10）</span><button type="button" class="refresh-build cursor-interaction">さいしんばんを よみこむ</button></div>
+<div class="build-info"><span>バージョン v14（20261101-11）</span><button type="button" class="refresh-build cursor-interaction">さいしんばんを よみこむ</button></div>
 <script>
 (()=>{
 qRefresh();
@@ -234,7 +234,7 @@ q('.resume').onclick=()=>{strategyPaused=false;restoreQuestion();message.textCon
 function resetCombatState(){remaining=0;strategyPaused=false;restoreQuestion()}
 function clearAllUnits(){for(const unit of units)unit.el.remove();units=[];formationDirty=true;formationCache.clear()}
 function transitionStage(){for(const effect of effects)effect.el.remove();effects=[];stage++;makeEnemy();for(const unit of units){unit.targetId=currentEnemy()?.id??null;unit.state='moving';unit.placementKey=null}formationDirty=true}
-function makeEnemy(){clearBossAreas();const boss=stage%5===0,type=boss?1:(stage-1)%3;const max=Math.ceil(20*Math.pow(1.25,stage-1)*(boss?1.7:1));const enemy={id:eid++,stage,...enemyPosition(26.5),radius:26.5,max,hp:max,atk:1+Math.floor((stage-1)/5),period:type===0?2:type===1?3:1,cd:0,type,boss,reward:Math.ceil(5*Math.pow(1.2,stage-1))*(boss?3:1)};enemies=[enemy];q('.enemy').textContent=boss?'👑':type===0?'🤖':type===1?'🗿':'🥷';q('.enemy').style.opacity='1';q('.enemy').style.left=enemy.x+'px';q('.enemy').style.top=enemy.y+'px';formationDirty=true}
+function makeEnemy(){clearBossAreas();const boss=stage%5===0,type=boss?1:(stage-1-Math.floor(stage/5))%3;const max=Math.ceil(20*Math.pow(1.25,stage-1)*(boss?1.7:1));const enemy={id:eid++,stage,...enemyPosition(26.5),radius:26.5,max,hp:max,atk:1+Math.floor((stage-1)/5),period:type===0?2:type===1?3:1,cd:0,type,boss,reward:Math.ceil(5*Math.pow(1.2,stage-1))*(boss?3:1)};enemies=[enemy];q('.enemy').textContent=boss?'👑':type===0?'🤖':type===1?'🗿':'🥷';q('.enemy').style.opacity='1';q('.enemy').style.left=enemy.x+'px';q('.enemy').style.top=enemy.y+'px';formationDirty=true}
 function problem(){let a,b,op;const type=Math.floor(Math.random()*4);if(type===0){a=1+Math.floor(Math.random()*20);b=1+Math.floor(Math.random()*20);op='＋';answer=a+b}else if(type===1){a=1+Math.floor(Math.random()*20);b=Math.floor(Math.random()*(a+1));op='−';answer=a-b}else if(type===2){a=1+Math.floor(Math.random()*9);b=1+Math.floor(Math.random()*9);op='×';answer=a*b}else{b=1+Math.floor(Math.random()*9);answer=1+Math.floor(Math.random()*9);a=b*answer;op='÷'}q('.expression').textContent=`${a}${op}${b}＝`;renderChoices()}
 
 function renderChoices(){
