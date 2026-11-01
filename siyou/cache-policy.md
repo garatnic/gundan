@@ -1,9 +1,9 @@
 # 更新確認・キャッシュ対策
 
 ## 現在のバージョン
-v13（20261101-10）
+v15（20261101-12）
 
-確認URL：https://garatnic.github.io/gundan/Index.html?v=20261101-10
+確認URL：https://garatnic.github.io/gundan/Index.html?v=20261101-12
 
 ## 実装
 - HTMLのmeta[name="gundan-version"]と画面下部に同一のバージョンを表示する。
@@ -28,4 +28,5 @@ v13（20261101-10）
 
 
 - 通し番号はmeta[name="gundan-release"]にも保持し、画面には日付版と併記する。
+
 

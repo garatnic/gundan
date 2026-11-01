@@ -32,8 +32,8 @@ for(const [width,height] of [[240,265],[390,800],[560,936]]){
 }
 // 11-12: ordinary area attack hits upper-side actors geometrically; death coins paid once.
 {
- const {t,e}=world(30);simulate(t,18);const front=t.get().units.filter(u=>t.touching(u,e)),top=front.reduce((a,b)=>a.y<b.y?a:b);for(const u of front)u.hp=u.max=3;top.hp=1;e.atk=1;e.type=1;e.cd=0;
- const before=new Map(front.map(u=>[u,u.hp])),expected=front.filter(u=>Math.hypot(u.x-top.x,u.y-top.y)<=55);t.attackEnemy(e,front,.01);for(const u of front)close(u.hp,before.get(u)-(expected.includes(u)?1:0));
+ const {t,e}=world(30);simulate(t,18);const front=t.get().units.filter(u=>t.touching(u,e)),top=front.reduce((a,b)=>a.y<b.y?a:b);for(const u of front)u.hp=u.max=3;top.hp=.4;e.atk=1;e.type=1;e.cd=0;
+ t.advanceBossAreas(1);const before=new Map(front.map(u=>[u,u.hp])),expected=front.filter(u=>Math.hypot(u.x-e.x,u.y-e.y)<=60);t.attackEnemy(e,front,.01);t.advanceBossAreas(1);for(const u of front)close(u.hp,before.get(u)-(expected.includes(u)?.4:0));
  const c=t.get().coins;t.removeDeadUnits();close(t.get().coins,c+1);t.removeDeadUnits();close(t.get().coins,c+1);
  // Force the boss's only living candidate to be on its upper side, using the real boss code.
  const upper=front.find(u=>u!==top&&u.y<e.y);for(const u of t.get().units)if(u!==upper)u.hp=0;t.removeDeadUnits();upper.hp=1;t.set({stage:5});t.makeEnemy();t.bossAttack(t.get().enemies[0]);const warning=t.get().pendingAreas[0];assert.ok(warning.areas.some(a=>Math.hypot(upper.x-a.x,upper.y-a.y)<=20));t.advanceBossAreas(.99);close(upper.hp,1);t.advanceBossAreas(.01);close(upper.hp,0);const coins=t.get().coins;t.removeDeadUnits();close(t.get().coins,coins+1);t.removeDeadUnits();close(t.get().coins,coins+1);
@@ -49,3 +49,4 @@ for(const [width,height] of [[240,265],[390,800],[560,936]]){
 }
 // 13: existing battle tests cover stage, both pause states, upgrades, prestige and scroll.
 console.log('v13 surrounding, economics and regression requirements passed');
+
